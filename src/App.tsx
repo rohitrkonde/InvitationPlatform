@@ -1,52 +1,76 @@
 import { useState } from 'react';
-import { ArrowRight, Check, Download, Heart, Image, MonitorPlay, Palette, Sparkles, Globe2 } from 'lucide-react';
+import { ArrowRight, Check, Heart, Image, MonitorPlay, Sparkles, Globe2 } from 'lucide-react';
 
 type Format = 'Invitation image' | 'Animated video' | 'Invitation website';
-const palettes = [
-  {name:'Rose Garden',bg:'#f8e8e5',ink:'#9d4d5b'},
-  {name:'Golden Hour',bg:'#f6edda',ink:'#9b7838'},
-  {name:'Modern Sage',bg:'#e8e9e2',ink:'#65715c'},
-  {name:'Midnight Bloom',bg:'#e6e1f0',ink:'#63558a'},
-  {name:'Little Sky',bg:'#e2edf5',ink:'#527f9b'}
+type Template = { id: string; name: string; style: string; tone: string; label: string };
+const imageTemplates: Template[] = [
+  {id:'rose',name:'Rose Garden',style:'template-rose',tone:'Romantic & floral',label:'AARAV & ANANYA'},
+  {id:'royal',name:'Royal Elegance',style:'template-royal',tone:'Classic & regal',label:'THE WEDDING OF'},
+  {id:'minimal',name:'Modern Minimal',style:'template-minimal',tone:'Clean & modern',label:'SAVE THE DATE'},
+  {id:'sage',name:'Botanical Sage',style:'template-sage',tone:'Natural & calm',label:'TOGETHER FOREVER'},
+  {id:'night',name:'Midnight Gold',style:'template-night',tone:'Premium evening',label:'AN EVENING TO REMEMBER'},
+  {id:'pastel',name:'Pastel Celebration',style:'template-pastel',tone:'Soft & joyful',label:'LET’S CELEBRATE'}
 ];
+const videoTemplates: Template[] = [
+  {id:'cinema',name:'Cinematic Romance',style:'video-cinema',tone:'Cinematic opening',label:'AARAV & ANANYA'},
+  {id:'floral',name:'Blooming Florals',style:'video-floral',tone:'Floral motion',label:'A BEAUTIFUL BEGINNING'},
+  {id:'royal-video',name:'Royal Celebration',style:'video-royal',tone:'Grand & elegant',label:'YOU ARE INVITED'},
+  {id:'modern-video',name:'Modern Moments',style:'video-modern',tone:'Minimal motion',label:'SAVE OUR DATE'}
+];
+const websiteTemplates: Template[] = [
+  {id:'story',name:'The Love Story',style:'site-story',tone:'Romantic event page',label:'OUR STORY'},
+  {id:'garden',name:'Garden Celebration',style:'site-garden',tone:'Fresh botanical',label:'JOIN US IN CELEBRATION'},
+  {id:'luxury',name:'Classic Luxe',style:'site-luxury',tone:'Elegant and refined',label:'A DAY TO REMEMBER'},
+  {id:'modern-site',name:'Modern RSVP',style:'site-modern',tone:'Simple and practical',label:'YOU’RE INVITED'}
+];
+const formatIds: Record<Format,string> = {'Invitation image':'image-templates','Animated video':'video-templates','Invitation website':'website-templates'};
 export default function App(){
-  const [format,setFormat]=useState<Format>('Invitation website');
-  const [palette,setPalette]=useState(palettes[0]);
-  const [names,setNames]=useState('Aarav & Ananya');
-  const [event,setEvent]=useState('Wedding Celebration');
-  const [date,setDate]=useState('Sunday, 22 February 2027');
-  const [venue,setVenue]=useState('The Garden Palace · Pune');
-  const [notice,setNotice]=useState(false);
-  function exportPreview(){
-    const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Invitation</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f2ec;font-family:Georgia,serif}.card{box-sizing:border-box;width:min(92vw,620px);padding:55px 25px;text-align:center;background:'+palette.bg+';color:'+palette.ink+';border:1px solid currentColor}.names{font-size:clamp(36px,8vw,64px);font-weight:normal}.details{font:14px/2 Arial,sans-serif}</style></head><body><main class="card"><p>TOGETHER WITH THEIR FAMILIES</p><h1 class="names">'+names.replace(/&/g,'&amp;')+'</h1><hr style="width:55px"><h2>'+event+'</h2><p class="details">'+date+'<br>'+venue+'</p><small>JOYFULLY BEGINNING FOREVER</small></main></body></html>';
-    const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})); const a=document.createElement('a');a.href=url;a.download='invitation-preview.html';a.click();URL.revokeObjectURL(url);
+  const [format,setFormat]=useState<Format>('Invitation image');
+  const [selectedTemplate,setSelectedTemplate]=useState('');
+  const [notice,setNotice]=useState('');
+  function browse(next: Format){
+    setFormat(next);
+    setSelectedTemplate('');
+    document.getElementById(formatIds[next])?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function choose(template: Template, next: Format){
+    setFormat(next);
+    setSelectedTemplate(template.id);
+    setNotice(`${template.name} selected — personalization and export will be added next.`);
+  }
+  function gallery(title: string, subtitle: string, items: Template[], next: Format){
+    return <section className="template-gallery" id={formatIds[next]} key={formatIds[next]}>
+      <div className="section-title"><span className="eyebrow">{next.toUpperCase()} TEMPLATES</span><h2>{title} <em>collection.</em></h2><p>{subtitle}</p></div>
+      <div className={next==='Invitation image'?'template-grid image-template-grid':next==='Animated video'?'template-grid video-template-grid':'template-grid website-template-grid'}>
+        {items.map((t,index)=><article className={`template-card ${selectedTemplate===t.id?'chosen':''}`} key={t.id}>
+          <button className={`template-art ${t.style}`} aria-label={`Preview ${t.name}`} onClick={()=>choose(t,next)}>
+            {next==='Invitation image' ? <span className="paper-invite"><small>{t.label}</small><strong>Aarav <i>&</i><br/>Ananya</strong><span className="ornament">✳ ─ ✳</span><b>22 · 02 · 2027</b><small>THE GARDEN PALACE · PUNE</small></span> :
+             next==='Animated video' ? <span className="video-template-inner"><i className="template-play">▶</i><small>{t.label}</small><strong>Aarav <i>&</i> Ananya</strong><b>22 · 02 · 2027</b><span className="fake-timeline"><i/></span></span> :
+             <span className="website-template-inner"><span className="fake-browser"><i/><i/><i/><small>our-invitation.example</small></span><span className="site-template-hero"><small>{t.label}</small><strong>Aarav <i>&</i><br/>Ananya</strong><b>22 FEBRUARY 2027 · PUNE</b><em>VIEW CELEBRATION DETAILS</em></span><span className="fake-site-content"><i/><i/><i/></span></span>}
+            {selectedTemplate===t.id&&<span className="selected-mark"><Check size={14}/> Selected</span>}
+          </button>
+          <div className="template-info"><div><h3>{t.name}</h3><p>{t.tone}</p></div><button className="use-template" onClick={()=>choose(t,next)}>{selectedTemplate===t.id?'Selected':'Choose'} <ArrowRight size={14}/></button></div>
+        </article>)}
+      </div>
+      <p className="gallery-footnote">{next==='Invitation image'?'Image file generation is not enabled yet; these are selectable design previews.':next==='Animated video'?'Video rendering and download will be added in a later build.':'Website publishing and unique invitation links will be added in a later build.'}</p>
+    </section>;
   }
   return <div className="shell">
-    <header className="topbar"><a className="brand" href="#home"><span className="brand-icon"><Heart size={18} fill="currentColor"/></span>invite<span className="brand-light">studio</span></a><nav><a href="#designs">Explore designs</a><a href="#how">How it works</a><a href="#editor">Create</a></nav><a className="btn dark" href="#editor">Start creating <ArrowRight size={15}/></a></header>
+    <header className="topbar"><a className="brand" href="#home"><span className="brand-icon"><Heart size={18} fill="currentColor"/></span>invite<span className="brand-light">studio</span></a><nav><a href="#designs">Explore designs</a><a href="#how">How it works</a><a href="#image-templates">Templates</a></nav><a className="btn dark" href="#designs">Start creating <ArrowRight size={15}/></a></header>
     <main>
-      <section className="hero" id="home"><div className="hero-copy"><span className="eyebrow"><Sparkles size={14}/> A LITTLE MAGIC FOR YOUR BIG DAY</span><h1>Make it a moment<br/>worth <em>remembering.</em></h1><p>Beautiful invitations for life's most meaningful moments. Design yours in minutes — no design skills, no stress.</p><div className="actions"><a className="btn dark" href="#editor">Create your invitation <ArrowRight size={16}/></a><a className="btn outline" href="#designs">Explore designs</a></div><div className="promise"><Check size={16}/> Easy to personalize <Check size={16}/> Start free <Check size={16}/> Share with one link</div></div>
-      <div className="hero-art"><div className="circle"></div><div className="hero-card" style={{background:palette.bg,color:palette.ink}}><span className="flower">✳</span><small>TOGETHER WITH THEIR FAMILIES</small><h2>Aarav <i>&</i><br/>Ananya</h2><hr/><p>REQUEST THE PLEASURE<br/>OF YOUR COMPANY</p><h3>22 · 02 · 2027</h3><small>THE GARDEN PALACE · PUNE</small><span className="foot">JOYFULLY BEGINNING FOREVER</span></div><div className="floating">Made with love <Heart size={14}/></div></div></section>
-      <section className="products" id="designs"><div className="section-title"><span className="eyebrow">ONE IDEA, THREE WAYS TO SHARE</span><h2>Your invitation, <em>your way.</em></h2><p>Choose a format that feels right for your celebration.</p></div><div className="product-grid"><button className={format==='Invitation image'?'product active':'product'} onClick={()=>setFormat('Invitation image')}><span className="product-icon rose"><Image/></span><h3>Invitation image</h3><p>A beautiful design ready to download and send anywhere.</p><b>Create an image <ArrowRight size={15}/></b></button><button className={format==='Animated video'?'product active':'product'} onClick={()=>setFormat('Animated video')}><span className="product-icon lilac"><MonitorPlay/></span><h3>Animated video</h3><p>Bring your invitation to life with motion and cinematic scenes.</p><b>Make it move <ArrowRight size={15}/></b></button><button className={format==='Invitation website'?'product active':'product'} onClick={()=>setFormat('Invitation website')}><span className="product-icon sage"><Globe2/></span><h3>Invitation website</h3><p>A shareable mini-website with all your event details in one place.</p><b>Build a website <ArrowRight size={15}/></b></button></div></section>
-      <section className="format-details" aria-label="Invitation formats">
-        <article className="format-panel image-panel" id="image">
-          <div className="format-art image-art"><div className="mini-invite"><span>✳</span><small>YOU ARE INVITED</small><strong>Aarav <i>&</i><br/>Ananya</strong><hr/><p>22 · 02 · 2027</p><small>THE GARDEN PALACE · PUNE</small></div></div>
-          <div className="format-copy"><span className="eyebrow">01 · MADE TO SHARE</span><h2>Invitation <em>image.</em></h2><p>A beautiful, polished invitation for WhatsApp, Instagram, email or printing. Personalize your details and choose a color palette.</p><ul><li>Personalized names and event details</li><li>Elegant color palettes</li><li>Designed for easy sharing</li></ul><button className="btn dark" onClick={()=>{setFormat('Invitation image');document.getElementById('editor')?.scrollIntoView({behavior:'smooth'});}}>Create an image <ArrowRight size={15}/></button><small className="format-note">Image file export is coming soon; the current editor exports an HTML preview.</small></div>
-        </article>
-        <article className="format-panel reverse video-panel" id="video">
-          <div className="format-art video-art"><div className="video-frame"><span className="play-mark">▶</span><small>A LITTLE MAGIC FOR YOUR BIG DAY</small><strong>Aarav <i>&</i> Ananya</strong><span className="video-date">22 · 02 · 2027</span><div className="video-timeline"><i/></div></div></div>
-          <div className="format-copy"><span className="eyebrow">02 · A MOMENT IN MOTION</span><h2>Animated <em>video.</em></h2><p>Turn your invitation into a cinematic announcement with graceful motion, romantic transitions and music-ready storytelling.</p><ul><li>Designed for vertical or widescreen sharing</li><li>Animated text and scene transitions</li><li>Personalized event details</li></ul><button className="btn dark" onClick={()=>{setFormat('Animated video');document.getElementById('editor')?.scrollIntoView({behavior:'smooth'});}}>Explore video <ArrowRight size={15}/></button><small className="format-note">Video rendering and download are planned features, not available in this demo yet.</small></div>
-        </article>
-        <article className="format-panel website-panel" id="website">
-          <div className="format-art website-art"><div className="site-mock"><div className="site-browser"><i/><i/><i/><span>your-invite / celebration</span></div><div className="site-hero"><small>TOGETHER WITH THEIR FAMILIES</small><strong>Aarav <i>&</i><br/>Ananya</strong><p>WE WOULD LOVE YOU TO JOIN US</p><span>22 FEBRUARY 2027 · PUNE</span></div><div className="site-blocks"><i/><i/><i/></div></div></div>
-          <div className="format-copy"><span className="eyebrow">03 · ONE LINK, ALL THE DETAILS</span><h2>Invitation <em>website.</em></h2><p>Create a shareable event page where guests can find the celebration details in one lovely place, ready to open on mobile or desktop.</p><ul><li>A dedicated invitation page</li><li>Date, venue and event information</li><li>Designed for a simple shareable link</li></ul><button className="btn dark" onClick={()=>{setFormat('Invitation website');document.getElementById('editor')?.scrollIntoView({behavior:'smooth'});}}>Build a website <ArrowRight size={15}/></button><small className="format-note">Publishing unique public links will be added with the platform backend.</small></div>
-        </article>
-      </section>
-      <section className="editor-section" id="editor"><div className="editor-copy"><span className="eyebrow">YOUR DETAILS, YOUR DESIGN</span><h2>A few details.<br/><em>A whole lot of heart.</em></h2><p>Try the live editor. Change your details and colors, then export a standalone invitation preview.</p><div className="feature"><Palette/><span><b>Make it yours</b><small>Names, date, venue and color palette</small></span></div><div className="feature"><Sparkles/><span><b>Instant preview</b><small>See your changes as you make them</small></span></div></div>
-      <div className="editor"><div className="editor-head"><span><i></i> INVITATION EDITOR</span><small>LIVE PREVIEW</small></div><div className="editor-grid"><div className="controls"><label>Invitation format<select value={format} onChange={e=>setFormat(e.target.value as Format)}><option>Invitation website</option><option>Invitation image</option><option>Animated video</option></select></label><label>Names<input value={names} maxLength={70} onChange={e=>setNames(e.target.value)}/></label><label>Event title<input value={event} maxLength={80} onChange={e=>setEvent(e.target.value)}/></label><label>Date<input value={date} maxLength={80} onChange={e=>setDate(e.target.value)}/></label><label>Venue<input value={venue} maxLength={100} onChange={e=>setVenue(e.target.value)}/></label><span className="label">Design palette</span><div className="swatches">{palettes.map(p=><button key={p.name} aria-label={p.name} title={p.name} onClick={()=>setPalette(p)} className={palette.name===p.name?'swatch selected':'swatch'} style={{background:p.bg,borderColor:palette.name===p.name?p.ink:'transparent'}}><i style={{background:p.ink}}/></button>)}</div><button className="btn dark export" onClick={exportPreview}><Download size={15}/> Export invitation preview</button><small className="fine">Demo exports a standalone HTML invitation. PNG/video rendering, accounts, verified payments and publishing are planned next.</small></div>
-      <div className="preview-wrap"><div className="invitation" style={{background:palette.bg,color:palette.ink}}><span className="flower">✳</span><small>TOGETHER WITH THEIR FAMILIES</small><h2>{names||'Your names here'}</h2><hr/><h3>{event||'Your celebration'}</h3><p>{date||'Your event date'}<br/>{venue||'Your venue'}</p><span className="foot">JOYFULLY BEGINNING FOREVER</span></div><div className="preview-meta"><span><i></i> Preview updates live</span><span>{format}</span></div></div></div></div></section>
-      <section className="how" id="how"><div className="section-title"><span className="eyebrow">SIMPLE FROM START TO SEND</span><h2>From idea to <em>invited.</em></h2><p>Less fiddling. More celebrating.</p></div><div className="steps"><article><b>01</b><h3>Pick your design</h3><p>Start with a style you love and make it your own.</p></article><article><b>02</b><h3>Add your details</h3><p>Personalize the names, date, venue and little details.</p></article><article><b>03</b><h3>Share the joy</h3><p>Export or publish your invitation and send it to everyone.</p></article></div></section>
-      <section className="cta"><span className="eyebrow">YOUR NEXT CHAPTER STARTS HERE</span><h2>Let's make something <em>meaningful.</em></h2><p>Your celebration deserves an invitation that feels like you.</p><a className="btn light" href="#editor">Create your invitation <ArrowRight size={16}/></a></section>
+      <section className="hero" id="home"><div className="hero-copy"><span className="eyebrow"><Sparkles size={14}/> A LITTLE MAGIC FOR YOUR BIG DAY</span><h1>Make it a moment<br/>worth <em>remembering.</em></h1><p>Beautiful invitations for life's most meaningful moments. Browse a design, choose your favorite, and make your celebration feel personal.</p><div className="actions"><a className="btn dark" href="#designs">Browse templates <ArrowRight size={16}/></a><a className="btn outline" href="#how">How it works</a></div><div className="promise"><Check size={16}/> Curated designs <Check size={16}/> Start free <Check size={16}/> Made for sharing</div></div>
+      <div className="hero-art"><div className="circle"></div><div className="hero-card"><span className="flower">✳</span><small>TOGETHER WITH THEIR FAMILIES</small><h2>Aarav <i>&</i><br/>Ananya</h2><hr/><p>REQUEST THE PLEASURE<br/>OF YOUR COMPANY</p><h3>22 · 02 · 2027</h3><small>THE GARDEN PALACE · PUNE</small><span className="foot">JOYFULLY BEGINNING FOREVER</span></div><div className="floating">Made with love <Heart size={14}/></div></div></section>
+      <section className="products" id="designs"><div className="section-title"><span className="eyebrow">ONE IDEA, THREE WAYS TO SHARE</span><h2>Your invitation, <em>your way.</em></h2><p>Choose a format to browse its available templates.</p></div><div className="product-grid">
+        <button className="product" onClick={()=>browse('Invitation image')}><span className="product-icon rose"><Image/></span><h3>Invitation image</h3><p>Elegant invitation designs for WhatsApp, social media, email or print.</p><b>Browse image templates <ArrowRight size={15}/></b></button>
+        <button className="product" onClick={()=>browse('Animated video')}><span className="product-icon lilac"><MonitorPlay/></span><h3>Animated video</h3><p>Cinematic announcement styles with motion-inspired visual previews.</p><b>Browse video templates <ArrowRight size={15}/></b></button>
+        <button className="product" onClick={()=>browse('Invitation website')}><span className="product-icon sage"><Globe2/></span><h3>Invitation website</h3><p>Beautiful event page layouts to bring celebration details together.</p><b>Browse website templates <ArrowRight size={15}/></b></button>
+      </div></section>
+      {gallery('Find your perfect image','Choose from floral, classic, minimal, botanical and premium invitation styles.',imageTemplates,'Invitation image')}
+      {gallery('Bring the moment to life','Explore visual directions for a romantic, cinematic or modern invitation video.',videoTemplates,'Animated video')}
+      {gallery('Your own little event website','Choose a page style for sharing event information in one convenient place.',websiteTemplates,'Invitation website')}
+      <section className="how" id="how"><div className="section-title"><span className="eyebrow">SIMPLE FROM START TO SEND</span><h2>From idea to <em>invited.</em></h2><p>Less fiddling. More celebrating.</p></div><div className="steps"><article><b>01</b><h3>Choose a format</h3><p>Browse image, video or website designs.</p></article><article><b>02</b><h3>Pick a template</h3><p>Choose the style that feels right for your celebration.</p></article><article><b>03</b><h3>Personalize and share</h3><p>Personalization, final export and publishing are the next platform features.</p></article></div></section>
+      <section className="cta"><span className="eyebrow">YOUR NEXT CHAPTER STARTS HERE</span><h2>Let's make something <em>meaningful.</em></h2><p>Start with a template that feels like you.</p><a className="btn light" href="#designs">Explore templates <ArrowRight size={16}/></a></section>
     </main><footer><a className="brand" href="#home"><span className="brand-icon"><Heart size={16} fill="currentColor"/></span>invite<span className="brand-light">studio</span></a><span>Made for moments that matter.</span><small>© 2026 InviteStudio · MVP preview</small></footer>
-    {notice&&<div className="notice" role="status"><Check size={16}/> Creative studio ready <button onClick={()=>setNotice(false)}>×</button></div>}
+    {notice&&<div className="notice" role="status"><Check size={16}/><span>{notice}</span><button aria-label="Dismiss notice" onClick={()=>setNotice('')}>×</button></div>}
   </div>
 }
